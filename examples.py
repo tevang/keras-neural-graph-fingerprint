@@ -2,7 +2,7 @@
 '''
 from __future__ import division, print_function, absolute_import
 
-from keras.layers import Input, merge, Dense
+from keras.layers import Input, add, Dense
 from keras import models
 
 import utils
@@ -45,8 +45,8 @@ bonds = Input(name='bond_inputs', shape=(max_atoms, max_degree, num_bond_feature
 edges = Input(name='edge_inputs', shape=(max_atoms, max_degree), dtype='int32')
 
 # Define the convoluted atom feature layers
-atoms1 = NeuralGraphHidden(conv_width, activation='relu', bias=False)([atoms0, bonds, edges])
-atoms2 = NeuralGraphHidden(conv_width, activation='relu', bias=False)([atoms1, bonds, edges])
+atoms1 = NeuralGraphHidden(conv_width, activation='relu', use_bias=False)([atoms0, bonds, edges])
+atoms2 = NeuralGraphHidden(conv_width, activation='relu', use_bias=False)([atoms1, bonds, edges])
 
 # Define the outputs of each (convoluted) atom featuer layer to fingerprint
 fp_out0 = NeuralGraphOutput(fp_length, activation='softmax')([atoms0, bonds, edges])
@@ -54,18 +54,18 @@ fp_out1 = NeuralGraphOutput(fp_length, activation='softmax')([atoms1, bonds, edg
 fp_out2 = NeuralGraphOutput(fp_length, activation='softmax')([atoms2, bonds, edges])
 
 # Sum outputs to obtain fingerprint
-final_fp = merge([fp_out0, fp_out1, fp_out2], mode='sum')
+final_fp = add([fp_out0, fp_out1, fp_out2])
 
 # Build and compile model for regression.
 main_prediction = Dense(1, activation='linear', name='main_prediction')(final_fp)
-model = models.Model(input=[atoms0, bonds, edges], output=[main_prediction])
+model = models.Model(inputs=[atoms0, bonds, edges], outputs=[main_prediction])
 model.compile(optimizer='adagrad', loss='mse')
 
 # Show summary
 model.summary()
 
 # Train the model
-model.fit([X_atoms, X_bonds, X_edges], labels, nb_epoch=20, batch_size=32, validation_split=0.2)
+model.fit([X_atoms, X_bonds, X_edges], labels, epochs=20, batch_size=32, validation_split=0.2)
 
 # ==============================================================================
 # ============ Example 2: Initialising layers in different ways  ===============
@@ -83,8 +83,8 @@ edges = Input(name='edge_inputs', shape=(max_atoms, max_degree), dtype='int32')
 
 # Define the convoluted atom feature layers
 # All methods of initialisation are equaivalent!
-atoms1 = NeuralGraphHidden(lambda: Dense(conv_width, activation='relu', bias=False))([atoms0, bonds, edges])
-atoms2 = NeuralGraphHidden(Dense(conv_width, activation='relu', bias=False))([atoms1, bonds, edges])
+atoms1 = NeuralGraphHidden(lambda: Dense(conv_width, activation='relu', use_bias=False))([atoms0, bonds, edges])
+atoms2 = NeuralGraphHidden(Dense(conv_width, activation='relu', use_bias=False))([atoms1, bonds, edges])
 
 # Define the outputs of each (convoluted) atom featuer layer to fingerprint
 # All methods of initialisation are equaivalent!
@@ -93,11 +93,11 @@ fp_out1 = NeuralGraphOutput(fp_length, activation='softmax')([atoms1, bonds, edg
 fp_out2 = NeuralGraphOutput(lambda: Dense(fp_length, activation='softmax'))([atoms2, bonds, edges])
 
 # Sum outputs to obtain fingerprint
-final_fp = merge([fp_out0, fp_out1, fp_out2], mode='sum')
+final_fp = add([fp_out0, fp_out1, fp_out2])
 
 # Build and compile model for regression.
 main_prediction = Dense(1, activation='linear', name='main_prediction')(final_fp)
-model2 = models.Model(input=[atoms0, bonds, edges], output=[main_prediction])
+model2 = models.Model(inputs=[atoms0, bonds, edges], outputs=[main_prediction])
 model2.compile(optimizer='adagrad', loss='mse')
 
 # Show summary
@@ -141,4 +141,4 @@ X_mols = GraphTensor([X_atoms, X_bonds, X_edges])
 
 # Build a generator and train the model
 my_generator = EpochIterator((X_mols, labels), batch_size=128)
-model4.fit_generator(my_generator, nb_epoch=20, samples_per_epoch=len(labels))
+model4.fit_generator(my_generator, epochs=20, samples_per_epoch=len(labels))

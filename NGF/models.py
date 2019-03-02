@@ -2,10 +2,12 @@
 '''
 from __future__ import division, print_function, absolute_import
 
-from keras.regularizers import l1l2
+# from keras.regularizers import l1_l2  # keras 1.2
+from keras.regularizers import l1_l2  # keras 2.*
 from keras.layers import Input, merge, Dense, Dropout, BatchNormalization
+from keras import layers
 from keras import models
-
+from keras import backend as K
 from .layers import NeuralGraphHidden, NeuralGraphOutput, NeuralGraphPool, AtomwiseDropout
 from .utils import zip_mixed, is_iterable
 
@@ -56,7 +58,7 @@ def build_graph_conv_model(max_atoms, max_degree, num_atom_features,
 	main_prediction = Dense(output_size, activation=final_activation, name='main_prediction')(net_output)
 
 	# Build and compile the model
-	model = models.Model(input=[atoms, bonds, edges], output=[main_prediction])
+	model = models.Model(inputs=[atoms, bonds, edges], outputs=[main_prediction])
 	model.compile(optimizer=optimizer, loss=loss)
 
 	return model
@@ -184,8 +186,8 @@ def build_graph_conv_net(data_input,
 			fp_atoms_in = ConvDropout(fp_dropout)(fp_atoms_in)
 
 		fp_out = NeuralGraphOutput(fp_size, activation=fp_activation, bias=fp_bias,
-								   W_regularizer=l1l2(fp_l1, fp_l2),
-								   b_regularizer=l1l2(fp_l1, fp_l2),
+								   W_regularizer=l1_l2(fp_l1, fp_l2),
+								   b_regularizer=l1_l2(fp_l1, fp_l2),
 								   **fp_kwargs)([fp_atoms_in, bonds, edges])
 		fingerprint_outputs.append(fp_out)
 
@@ -210,8 +212,8 @@ def build_graph_conv_net(data_input,
 		# 	the most powerfull (e.g. allows custom activation functions)
 		def inner_layer_fn():
 			return Dense(conv_size, activation=conv_activation, bias=conv_bias,
-						 W_regularizer=l1l2(conv_l1, conv_l2),
-						 b_regularizer=l1l2(conv_l1, conv_l2), **conv_kwargs)
+						 W_regularizer=l1_l2(conv_l1, conv_l2),
+						 b_regularizer=l1_l2(conv_l1, conv_l2), **conv_kwargs)
 		atoms_out = NeuralGraphHidden(inner_layer_fn)([atoms_in, bonds, edges])
 
 		if graphpool:
@@ -230,8 +232,8 @@ def build_graph_conv_net(data_input,
 				fp_atoms_in = ConvDropout(fp_dropout)(fp_atoms_in)
 
 			fp_out = NeuralGraphOutput(fp_size, activation=fp_activation, bias=fp_bias,
-									   W_regularizer=l1l2(fp_l1, fp_l2),
-									   b_regularizer=l1l2(fp_l1, fp_l2),
+									   W_regularizer=l1_l2(fp_l1, fp_l2),
+                              				   b_regularizer=l1_l2(fp_l1, fp_l2),
 									   **fp_kwargs)([fp_atoms_in, bonds, edges])
 
 			# Export
@@ -241,7 +243,9 @@ def build_graph_conv_net(data_input,
 
 	# Merge fingerprint
 	if len(fingerprint_outputs) > 1:
-		final_fp = merge(fingerprint_outputs, mode=fp_merge_mode)
+		#final_fp = merge(fingerprint_outputs, mode=fp_merge_mode)
+                if fp_merge_mode=="sum":
+                    final_fp = merge.Add()(fingerprint_outputs)
 	else:
 		final_fp = fingerprint_outputs[-1]
 
@@ -261,8 +265,8 @@ def build_graph_conv_net(data_input,
 			net_in = Dropout(net_dropout)(net_in)
 
 		net_out = Dense(layer_size, activation=net_activation, bias=net_bias,
-						W_regularizer=l1l2(net_l1, net_l2),
-						b_regularizer=l1l2(net_l1, net_l2), **net_kwargs)(net_in)
+						W_regularizer=l1_l2(net_l1, net_l2),
+						b_regularizer=l1_l2(net_l1, net_l2), **net_kwargs)(net_in)
 
 		# Export
 		net_outputs.append(net_out)

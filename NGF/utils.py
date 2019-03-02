@@ -59,7 +59,7 @@ def zip_mixed(*mixed_iterables, **kwargs):
         if isinstance(item, repeat_classes):
             mixed_iterables[i] = cycle([item])
 
-    return zip(*mixed_iterables)
+    return list(zip(*mixed_iterables))
 
 def mol_dims_to_shapes(max_atoms, max_degree, num_atom_features, num_bond_features, num_molecules=None):
     ''' Helper function, returns shape for molecule tensors given dim sizes

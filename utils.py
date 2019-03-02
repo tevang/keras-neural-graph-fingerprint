@@ -22,7 +22,7 @@ def read_csv(filename, nrows, input_name, target_name):
         for row in it.islice(reader, nrows):
             data[0].append(row[input_name])
             data[1].append(float(row[target_name]))
-    return map(np.array, data)
+    return list(map(np.array, data))
 
 def permute_data(data, labels=None, FixSeed=None, return_permutation=False, permutation = None):
     """Returns:

@@ -245,7 +245,7 @@ def tensorise_smiles_mp(smiles, max_degree=5, max_atoms=None, workers=cpu_count(
             tensor_list.append(tensors)
         print('Merging batch tensors...    ', end='')
     else:
-        tensor_list = pool.map(map_function, smiles_chunks)
+        tensor_list = list(pool.map(map_function, smiles_chunks))
     if verbose:
         print('[DONE]')
 

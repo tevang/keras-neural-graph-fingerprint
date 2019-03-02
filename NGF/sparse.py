@@ -62,12 +62,11 @@ class SparseTensor(object):
 
         # Sort if necessary
         if not assume_sorted and len(nonsparse_values):
-            nonsparse_entries = zip(nonsparse_values, *nonsparse_indices)
+            nonsparse_entries = list(zip(nonsparse_values, *nonsparse_indices))
             sorted(nonsparse_entries, key=lambda x: x[main_axis+1])
-            sorted_entries = zip(*nonsparse_entries)
+            sorted_entries = list(zip(*nonsparse_entries))
             nonsparse_values = list(sorted_entries[0])
             nonsparse_indices = list(sorted_entries[1:])
-
         self.nonsparse_indices = [np.array([]) for _ in range(ndims)]
         self.nonsparse_values = np.array([])
 
@@ -513,7 +512,7 @@ class EpochIterator(object):
     def __iter__(self):
         return self
 
-    def next(self):
+    def __next__(self):
         # At the end of an epoch, raise Stopiteration, or reset counter
         if self.i >= len(self.data):
             if self.epoch >= self.epochs:
@@ -538,7 +537,7 @@ class EpochIterator(object):
         '''
         self.i = 0
         self.epoch = 1
-        self.indices = range(len(self.data))
+        self.indices = list(range(len(self.data)))
 
 
 def unit_tests_sparse_tensor(seed=None):
