@@ -2,13 +2,13 @@
 '''
 from __future__ import division, print_function, absolute_import
 
-from keras.layers import Input, add, Dense
 from keras import models
+from keras.layers import Input, add, Dense
 
 import utils
-from NGF.preprocessing import tensorise_smiles, tensorise_smiles_mp
 from NGF.layers import NeuralGraphHidden, NeuralGraphOutput
 from NGF.models import build_graph_conv_model
+from NGF.preprocessing import tensorise_smiles_mp
 from NGF.sparse import GraphTensor, EpochIterator
 
 # ==============================================================================
@@ -54,7 +54,7 @@ fp_out1 = NeuralGraphOutput(fp_length, activation='softmax')([atoms1, bonds, edg
 fp_out2 = NeuralGraphOutput(fp_length, activation='softmax')([atoms2, bonds, edges])
 
 # Sum outputs to obtain fingerprint
-final_fp = add([fp_out0, fp_out1, fp_out2])
+final_fp = add([fp_out0, fp_out1, fp_out2], name="sum_layer")
 
 # Build and compile model for regression.
 main_prediction = Dense(1, activation='linear', name='main_prediction')(final_fp)
@@ -65,7 +65,13 @@ model.compile(optimizer='adagrad', loss='mse')
 model.summary()
 
 # Train the model
-model.fit([X_atoms, X_bonds, X_edges], labels, epochs=20, batch_size=32, validation_split=0.2)
+model.fit([X_atoms, X_bonds, X_edges], labels, epochs=1, batch_size=32, validation_split=0.2)
+
+# If you want to extract just the feature vectors of 'sum_layer', namely the graph convolution fingerprint to train any ML model
+MODEL = models.Model(inputs=[atoms0, bonds, edges], outputs=[final_fp])
+MODEL.compile(optimizer='adagrad', loss='mse')
+MODEL.predict([X_atoms, X_bonds, X_edges])
+
 
 # ==============================================================================
 # ============ Example 2: Initialising layers in different ways  ===============

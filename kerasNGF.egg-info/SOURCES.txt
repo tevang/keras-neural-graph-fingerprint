@@ -1,0 +1,13 @@
+README.md
+setup.py
+NGF/__init__.py
+NGF/features.py
+NGF/layers.py
+NGF/models.py
+NGF/preprocessing.py
+NGF/sparse.py
+NGF/utils.py
+kerasNGF.egg-info/PKG-INFO
+kerasNGF.egg-info/SOURCES.txt
+kerasNGF.egg-info/dependency_links.txt
+kerasNGF.egg-info/top_level.txt
