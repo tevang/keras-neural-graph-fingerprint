@@ -12,22 +12,29 @@ from .layers import NeuralGraphHidden, NeuralGraphOutput, NeuralGraphPool, Atomw
 from .utils import zip_mixed, is_iterable
 
 
-def get_ngf(SMILES, model_type='1', conv_width=8, fp_length=248):
+def get_ngf(SMILES, model_type='1', conv_width=8, fp_length=62):
 	"""
 	Method to calculate automatically the Neural Graph Fingerprint from the given SMILES list.
 	All operations in one method (model building and feature vector retrieval for the given SMILES list).
-	:param SMILES:
-	:param model_type:
-	:param conv_width: the
-	:param fp_length:
-	:return:
+	:param SMILES: list of SMILES strings of the input molecules.
+	:param model_type: currently can be only '1' and will create the model of EXAMPLE #3 (examples.py).
+	:param conv_width: the width of each convolutional layer.
+	:param fp_length: the length of the final fingerprint (feature vector).
+	:return: NGF fingerprint: list of vectors of floats of size 'fp_length'
 	"""
 
 	model = build_default_model(SMILES=SMILES, model_type=model_type, conv_width=conv_width, fp_length=fp_length)
 	return featvecs_from_graph_conv_model(model, SMILES)
 
 def build_default_model(SMILES, model_type='1', conv_width=8, fp_length=62):
-
+	"""
+	Method to build one of the default Neural Graph models.
+	:param SMILES: list of SMILES strings of the input molecules.
+	:param model_type: currently can be only '1' and will create the model of EXAMPLE #3 (examples.py).
+	:param conv_width: the width of each convolutional layer.
+	:param fp_length: the length of the final fingerprint (feature vector).
+	:return: model: Keras model
+	"""
 
 	# Tensorise data
 	X_atoms, X_bonds, X_edges = tensorise_smiles_mp(SMILES)
@@ -52,8 +59,13 @@ def build_default_model(SMILES, model_type='1', conv_width=8, fp_length=62):
 
 
 def featvecs_from_graph_conv_model(model, SMILES):
-	# Extracts just the feature vectors of 'sum_layer', namely the graph convolution fingerprint
-	# to train any ML model
+	"""
+	Method to extract just the feature vectors of 'sum_layer', namely the graph convolution fingerprint, which can be used
+	to train any ML model.
+	:param model: Keras model
+	:param SMILES: list of SMILES strings of the input molecules.
+	:return:
+	"""
 	# Tensorise data
 	X_atoms, X_bonds, X_edges = tensorise_smiles_mp(SMILES)
 	MODEL = models.Model(inputs=model.get_input_at(0), outputs=model.get_layer(index=-2).get_output_at(0))

@@ -1,0 +1,5 @@
+pip==19.0.3
+tensorflow==1.13.1
+setuptools==40.8.0
+Keras==2.2.4
+numpy==1.16.2

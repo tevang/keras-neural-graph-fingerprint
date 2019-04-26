@@ -1,12 +1,18 @@
-# Keras Neural Graph Fingerprint
+# Keras Neural Graph Fingerprint for Python 3
 
-This repository is an implementation of [Convolutional Networks on Graphs for Learning Molecular Fingerprints][NGF-paper] in Keras.
+This repository is an implementation of [Convolutional Networks on Graphs for Learning Molecular Fingerprints][NGF-paper] 
+in Keras 2.x and TensorFlow 1.13.x. It is based on the implementation of [Ties van Rozendaal][Ties van Rosendaal] 
+in Keras 1.1.x and Theano 1.0.
 
 It includes a preprocessing function to convert molecules in smiles representation
 into molecule tensors.
 
 Next to this, it includes two custom layers for Neural Graphs in Keras, allowing
 flexible Keras fingerprint models. See [examples.py](examples.py) for an examples
+
+Furthermore it has been added an installation script and a user friendly API for 
+non-expert users, who wish to retrieve the NGF vector representation of molecules
+from SMILES with a single command, which can be the input to any ML algorithm. 
 
 ## Related work
 
@@ -18,8 +24,37 @@ There are several implementations of this paper publicly available:
  - by [DeepChem][5] using tensorflow
 
 The closest implementation is the implementation by GUR9000 in Keras. However this
-repository represents moleculs in a fundamentally different way. The consequences
+repository represents molecules in a fundamentally different way. The consequences
 are described in the sections below.
+
+## Installation
+
+#### Dependencies
+- [**RDKit**](http://www.rdkit.org/) is necessary to convert molecules into tensor representation.
+For installation instructions refer to the RDKit website. The quickest way (works most of the times)
+is:
+```python
+conda install -c conda-forge rdkit
+```
+Then install keras-neural-fingerprint using `pip`:
+```python
+pip install git+https://github.com/iwatobipen/keras-neural-graph-fingerprint
+```
+
+## Neural Graph Fingerprints for the impatient ones
+For convienience, a function is included that can build default Neural Graph models and retrieve
+the Neural Graph Fingerprint, which can be later used for training of any ML model. See 
+[NGF/models.py](NGF/models.py) for details.
+
+Simply select the type of model that you want and pass the SMILES list to the function:
+```python
+from NGF.models import *
+SMILES = ['CCCCNC(=O)[C@H](C)C[C@H](O)[C@@H]2Cc3cc(Cc1ccccc1OCC(=O)N[C@@H](C)C(=O)N2)c(O)cc3', 
+            'CCCCNC(=O)[C@H](C)C[C@H](O)[C@@H]2Cc3ccc(O)c(Cc1ccccc1OCCCCC(=O)N2)c3']
+NG_fp = get_ngf(SMILES, model_type='1')
+```
+`NG_fp` will be a list of feature vectors, namely those that you need.
+
 
 ## Molecule Representation
 
@@ -152,13 +187,6 @@ You can store and load the trained models. Make sure to specify the custom class
 model = load_model('model.h5', custom_objects={'NeuralGraphHidden':NeuralGraphHidden, 'NeuralGraphOutput':NeuralGraphOutput})
 ```
 
-## Dependencies
-- [**RDKit**](http://www.rdkit.org/) This dependency is nescecairy to convert molecules into tensor
-representatins, once this step is conducted, the new data can be stored, and RDkit
-is no longer a dependency.
-- [**Keras**](https://keras.io/) Requires keras 1.x for building, training and evaluating the models.
-- [**NumPy**](http://www.numpy.org/)
-
 ## Acknowledgements
 - Implementation is based on [Duvenaud et al., 2015][NGF-paper].
 - Feature extraction scripts were copied from [the original implementation][1]
@@ -166,6 +194,7 @@ is no longer a dependency.
 - The usage of the Keras functional API was inspired by [GRU2000][3]
 - Graphpool layer adopted from [Han, et al., 2016][DeepChem-paper]
 
+[Ties van Rosendaal]: https://github.com/keiserlab/keras-neural-graph-fingerprint
 [NGF-paper]: https://arxiv.org/abs/1509.09292
 [DeepChem-paper]:https://arxiv.org/abs/1611.03199
 [keiserlab]: //http://www.keiserlab.org/

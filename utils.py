@@ -12,8 +12,10 @@ which is copied to data/data.license.txt
 from __future__ import print_function
 
 import csv
-import numpy as np
 import itertools as it
+
+import numpy as np
+
 
 def read_csv(filename, nrows, input_name, target_name):
     data = ([], [])

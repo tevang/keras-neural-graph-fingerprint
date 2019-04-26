@@ -1,0 +1,14 @@
+README.md
+setup.py
+NGF/__init__.py
+NGF/features.py
+NGF/layers.py
+NGF/models.py
+NGF/preprocessing.py
+NGF/sparse.py
+NGF/utils.py
+NGF.egg-info/PKG-INFO
+NGF.egg-info/SOURCES.txt
+NGF.egg-info/dependency_links.txt
+NGF.egg-info/requires.txt
+NGF.egg-info/top_level.txt
