@@ -52,6 +52,7 @@ class SparseTensor(object):
         - build new lookup during __getitem__ and pass on init of new tensor to
             avoid expensive rebuilding
     '''
+
     def __init__(self, nonsparse_indices, nonsparse_values, default_value=0,
                  max_shape=None, dtype=None, main_axis=0, assume_sorted=False):
 
@@ -65,7 +66,7 @@ class SparseTensor(object):
         # Sort if necessary
         if not assume_sorted and len(nonsparse_values):
             nonsparse_entries = list(zip(nonsparse_values, *nonsparse_indices))
-            sorted(nonsparse_entries, key=lambda x: x[main_axis+1])
+            sorted(nonsparse_entries, key=lambda x: x[main_axis + 1])
             sorted_entries = list(zip(*nonsparse_entries))
             nonsparse_values = list(sorted_entries[0])
             nonsparse_indices = list(sorted_entries[1:])
@@ -74,28 +75,30 @@ class SparseTensor(object):
 
         # Convert indices and values to numpy array and check dimensionality
         for i, ind in enumerate(nonsparse_indices):
-            assert len(ind) == len(nonsparse_values), 'nonsparse_indices (size{0} @index {1}) should be of same length as nonsparse_values (size {2})'.format(len(ind), i, len(nonsparse_values))
+            assert len(ind) == len(
+                nonsparse_values), 'nonsparse_indices (size{0} @index {1}) should be of same length as nonsparse_values (size {2})'.format(
+                len(ind), i, len(nonsparse_values))
             nonsparse_indices[i] = np.array(ind, dtype='int')
             self.nonsparse_indices = nonsparse_indices
         self.nonsparse_values = np.array(nonsparse_values)
 
         # Calculate and set the shape
         if len(self.nonsparse_values):
-            self.true_shape = tuple([max(inds)+1 for inds in nonsparse_indices])
+            self.true_shape = tuple([max(inds) + 1 for inds in nonsparse_indices])
         else:
-            self.true_shape = tuple([0]*ndims)
+            self.true_shape = tuple([0] * ndims)
 
         # Setting dtype will alter self.nonsparse_values
         dtype = dtype or self.nonsparse_values.dtype
         self.dtype = dtype
 
         # Setting max_shape will check if shape matches with nonsparse entries
-        self.max_shape = max_shape or [None]*ndims
+        self.max_shape = max_shape or [None] * ndims
 
         # Build lookup for quick indexing along the main_axis
         #   lookup defines first position of that element
         self.lookup = np.searchsorted(nonsparse_indices[self.main_axis],
-                                      range(self.shape[self.main_axis]+1))
+                                      range(self.shape[self.main_axis] + 1))
 
     @property
     def max_shape(self):
@@ -104,13 +107,14 @@ class SparseTensor(object):
     @max_shape.setter
     def max_shape(self, max_shape):
         for true_s, max_s, in zip(self.true_shape, max_shape):
-            assert (max_s is None) or (max_s>=true_s) , 'Cannot set max_shape {} smaller than true shape {}'.format(max_shape, self.true_shape)
+            assert (max_s is None) or (max_s >= true_s), 'Cannot set max_shape {} smaller than true shape {}'.format(
+                max_shape, self.true_shape)
         self._max_shape = tuple(max_shape)
 
     @property
     def shape(self):
-        return tuple([true_s if max_s==None else max_s
-                     for true_s, max_s in zip(self.true_shape, self.max_shape)])
+        return tuple([true_s if max_s == None else max_s
+                      for true_s, max_s in zip(self.true_shape, self.max_shape)])
 
     @property
     def ndims(self):
@@ -145,7 +149,7 @@ class SparseTensor(object):
             while keys < 0:
                 keys += len(self)
 
-            start_stop = self.lookup[keys:keys+2]
+            start_stop = self.lookup[keys:keys + 2]
             if len(start_stop):
                 inds = range(*start_stop)
             else:
@@ -168,7 +172,7 @@ class SparseTensor(object):
                     if i == self.main_axis:
                         # For the main_axis, rewrite the keys in chronological
                         #   order (e.g. respect the ordering provided by keys)
-                        indices[i].append(np.array([g]*len(add_values)))
+                        indices[i].append(np.array([g] * len(add_values)))
                     else:
                         indices[i].append(add_indices[i])
 
@@ -203,7 +207,8 @@ class SparseTensor(object):
             if len(keys) == 0:
                 raise IndexError('Cannot index `SparseTensor` with empty slice (`[]`)')
             else:
-                assert isinstance(keys[0], int), 'Indexing is only allowed along the main axis ({})'.format(self.main_axis)
+                assert isinstance(keys[0], int), 'Indexing is only allowed along the main axis ({})'.format(
+                    self.main_axis)
         elif isinstance(keys, int):
             pass
         else:
@@ -219,7 +224,7 @@ class SparseTensor(object):
             indices.pop(main_axis)
             max_shape.pop(main_axis)
             # Determining the new main axis is actually a trivial decision
-            main_axis = min(main_axis, len(max_shape)-1)
+            main_axis = min(main_axis, len(max_shape) - 1)
 
         return self.__class__(dtype=self.dtype,
                               nonsparse_indices=indices, nonsparse_values=values,
@@ -228,14 +233,14 @@ class SparseTensor(object):
 
     def __repr__(self):
         return "%s(dtype='%s', nonsparse_indices=%r, nonsparse_values=%r, main_axis=%r, default_value=%r, max_shape=%r)" % (
-                self.__class__.__name__, self.dtype,
-                [list(ind) for ind in self.nonsparse_indices],
-                list(self.nonsparse_values), self.main_axis, self.default_value,
-                self.max_shape)
+            self.__class__.__name__, self.dtype,
+            [list(ind) for ind in self.nonsparse_indices],
+            list(self.nonsparse_values), self.main_axis, self.default_value,
+            self.max_shape)
 
     def __str__(self):
         return "%s(dtype='%s', shape=%s, default_value=%s)" % (
-                self.__class__.__name__, self.dtype, self.shape, self.default_value)
+            self.__class__.__name__, self.dtype, self.shape, self.default_value)
 
     def __eq__(self, other):
         ''' Returns true if the sparse matrix can be expressed as other (by
@@ -251,7 +256,7 @@ class SparseTensor(object):
 
         if isinstance(other, SparseTensor):
             other = other.as_array()
-            shape = [max(s, o) for s,o in zip(self.shape, other.shape)]
+            shape = [max(s, o) for s, o in zip(self.shape, other.shape)]
         else:
             other = np.array(other)
             shape = other.shape
@@ -284,13 +289,12 @@ class SparseTensor(object):
         nonsparse_values = arr[nonsparse_indices]
 
         # Assume_sorted if main_axis=0 because of np.where
-        assume_sorted = main_axis==0
+        assume_sorted = main_axis == 0
 
         return cls(dtype=arr.dtype, nonsparse_indices=nonsparse_indices,
                    nonsparse_values=nonsparse_values, main_axis=0,
                    max_shape=max_shape, default_value=default_value,
                    assume_sorted=assume_sorted)
-
 
     def as_array(self, shape=None):
         '''Returns the SparseTensor as a nonsparse np.array
@@ -315,9 +319,11 @@ class SparseTensor(object):
             shape = [None] * self.ndims
 
         # Overwrite None with self.shape
-        shape = [true_s if s==None else s for s, true_s in zip(shape, self.shape)]
+        shape = [true_s if s == None else s for s, true_s in zip(shape, self.shape)]
         # Check if obtained shape matches with self.true_shape
-        assert np.all([s >=true_s for s, true_s in zip(shape, self.true_shape)]), 'shape ({}) should be at least {}'.format(shape, self.true_shape)
+        assert np.all(
+            [s >= true_s for s, true_s in zip(shape, self.true_shape)]), 'shape ({}) should be at least {}'.format(
+            shape, self.true_shape)
 
         out = np.zeros(shape, dtype=self.dtype)
         out.fill(self.default_value)
@@ -344,17 +350,18 @@ class SparseTensor(object):
 
         return dict(nonsparse_indices=nonsparse_indices, nonsparse_values=nonsparse_values,
                     default_value=self.default_value, dtype=str(self.dtype),
-                    main_axis=self.main_axis, max_shape=self.max_shape,)
+                    main_axis=self.main_axis, max_shape=self.max_shape, )
 
     @classmethod
     def from_config(cls, config):
         ''' Returns a SparseTensor based on the `config` dict
         '''
         return cls(nonsparse_indices=config['nonsparse_indices'],
-                    nonsparse_values=config['nonsparse_values'],
-                    default_value=config['default_value'], dtype=config['dtype'],
-                    main_axis=config['main_axis'], max_shape=config['max_shape'],
-                    assume_sorted=True)
+                   nonsparse_values=config['nonsparse_values'],
+                   default_value=config['default_value'], dtype=config['dtype'],
+                   main_axis=config['main_axis'], max_shape=config['max_shape'],
+                   assume_sorted=True)
+
 
 class TensorList(object):
     ''' Helperclass to cluster tensors together, acts as a single list by propageting
@@ -402,6 +409,7 @@ class TensorList(object):
     def __len__(self):
         return self.length
 
+
 class GraphTensor(TensorList):
     ''' Datacontainer for (molecular) graph tensors.
 
@@ -422,6 +430,7 @@ class GraphTensor(TensorList):
             dimension.
 
     '''
+
     def __init__(self, mol_tensors, sparse_max_atoms=True, sparse_max_degree=False):
 
         self.sparse_max_atoms = sparse_max_atoms
@@ -438,7 +447,7 @@ class GraphTensor(TensorList):
             max_degree = None
 
         max_shapes = mol_dims_to_shapes(max_atoms, max_degree, num_atom_features,
-                                       num_bond_features)
+                                        num_bond_features)
 
         # Convert into SparseTensors
         atoms, bonds, edges = mol_tensors
@@ -479,6 +488,7 @@ class GraphTensor(TensorList):
     def true_shape(self):
         return [t.max_shape for t in self.tensors]
 
+
 class EpochIterator(object):
     ''' Iterates over a dataset. (designed for keras fit_generator)
 
@@ -502,6 +512,7 @@ class EpochIterator(object):
     # Note
         designed for use with keras `model.fit_generator`
     '''
+
     def __init__(self, data, batch_size=1, epochs=None, shuffle=True):
         self.data = TensorList(data)
         self.epochs = epochs or np.inf
@@ -524,11 +535,11 @@ class EpochIterator(object):
                 self.epoch += 1
 
         # At the begin of an epoch, shuffle the order of the data
-        if self.i==0 and self.shuffle:
+        if self.i == 0 and self.shuffle:
             np.random.shuffle(self.indices)
 
         # Get the indices for this batch, and update counter i
-        use_inds = self.indices[self.i:self.i+self.batch_size]
+        use_inds = self.indices[self.i:self.i + self.batch_size]
         self.i += len(use_inds)
 
         # Return as tuple
@@ -543,10 +554,9 @@ class EpochIterator(object):
 
 
 def unit_tests_sparse_tensor(seed=None):
-
     np.random.seed(seed)
 
-    arr = np.random.randint(3, size=(2000,30,5,8))
+    arr = np.random.randint(3, size=(2000, 30, 5, 8))
     sparse = SparseTensor.from_array(arr)
 
     singleton_shape = arr.shape[1:]
@@ -559,10 +569,10 @@ def unit_tests_sparse_tensor(seed=None):
     assert np.all(sparse[0].as_array(singleton_shape) == arr[0])
 
     print('Testing: Negative integer indexing should be identical to numpy')
-    assert np.all(sparse[len(sparse)-1].as_array(singleton_shape) == sparse[-1].as_array(singleton_shape) )
+    assert np.all(sparse[len(sparse) - 1].as_array(singleton_shape) == sparse[-1].as_array(singleton_shape))
 
     print('Testing: List indexing should be identical to numpy')
-    get_inds = [2,-1,3,6,0,0,1]
+    get_inds = [2, -1, 3, 6, 0, 0, 1]
     assert np.all(sparse[get_inds].as_array(full_shape) == arr[get_inds])
 
     print('Testing: Slice indexing should be identical to numpy')
@@ -570,7 +580,7 @@ def unit_tests_sparse_tensor(seed=None):
 
     print('Testing: Various indexing testcases that should return same array as sparse')
     assert np.all(sparse.as_array(full_shape) == sparse[:].as_array(full_shape))
-    assert np.all(sparse.as_array(full_shape) == sparse[0:len(sparse)+10].as_array(full_shape))
+    assert np.all(sparse.as_array(full_shape) == sparse[0:len(sparse) + 10].as_array(full_shape))
 
     print('Testing: Equality functions return `True` for all entries when comparing sparse with sparse')
     assert np.all(sparse == sparse.as_array(full_shape))
@@ -607,11 +617,12 @@ def unit_tests_sparse_tensor(seed=None):
     assert np.all(pkl.loads(pkl.dumps(sparse)) == sparse)
     assert np.all(pkl.loads(pkl.dumps(sparse)) == sparse.as_array())
 
+
 def unit_tests_graph_tensor(seed=None):
     np.random.seed(seed)
 
     # Parameters for generative model
-    num_molecules=50
+    num_molecules = 50
     max_atoms = 40
     max_degree = 6
     num_atom_features = 62
@@ -620,10 +631,10 @@ def unit_tests_graph_tensor(seed=None):
     # Generate/simulate graph tensors
     atoms = np.zeros((num_molecules, max_atoms, num_atom_features))
     bonds = np.zeros((num_molecules, max_atoms, max_degree, num_bond_features))
-    edges = np.zeros((num_molecules, max_atoms, max_degree)) -1
+    edges = np.zeros((num_molecules, max_atoms, max_degree)) - 1
 
     # Generate atoms for each molecule
-    for i, n_atoms in  enumerate(np.random.randint(1, max_atoms, size=num_molecules)):
+    for i, n_atoms in enumerate(np.random.randint(1, max_atoms, size=num_molecules)):
         atoms[i, 0:n_atoms, :] = np.random.randint(3, size=(n_atoms, num_atom_features))
 
         # Generator neighbours/bonds for each atom
@@ -666,8 +677,8 @@ def unit_tests_graph_tensor(seed=None):
     print('Testing: num_molecules is constant in size')
     assert len(num_molecules_sizes) == 1
 
-def unit_test_epoch_iterator(seed=None):
 
+def unit_test_epoch_iterator(seed=None):
     np.random.seed(seed)
 
     n_datapoints = 50
@@ -712,6 +723,7 @@ def unit_tests(seed=None):
     print("\n{:=^100}".format('  Unit tests for `EpochIterator`  '))
     unit_test_epoch_iterator(seed=seed)
     print('All unit tests passed!')
+
 
 if __name__ == '__main__':
     unit_tests()

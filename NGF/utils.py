@@ -32,12 +32,14 @@ def filter_func_args(fn, args, invalid_args=[], overrule_args=[]):
                 other_args[arg] = val
     return fn_args, other_args
 
+
 def is_iterable(obj):
     try:
         iter(obj)
         return True
     except TypeError:
         return False
+
 
 def zip_mixed(*mixed_iterables, **kwargs):
     ''' Zips a mix of iterables and non-iterables, non-iterables are repeated
@@ -62,6 +64,7 @@ def zip_mixed(*mixed_iterables, **kwargs):
 
     return list(zip(*mixed_iterables))
 
+
 def mol_dims_to_shapes(max_atoms, max_degree, num_atom_features, num_bond_features, num_molecules=None):
     ''' Helper function, returns shape for molecule tensors given dim sizes
     '''
@@ -69,6 +72,7 @@ def mol_dims_to_shapes(max_atoms, max_degree, num_atom_features, num_bond_featur
     bonds_shape = (num_molecules, max_atoms, max_degree, num_bond_features)
     edges_shape = (num_molecules, max_atoms, max_degree)
     return [atoms_shape, bonds_shape, edges_shape]
+
 
 def mol_shapes_to_dims(mol_tensors=None, mol_shapes=None):
     ''' Helper function, returns dim sizes for molecule tensors given tensors or
@@ -86,8 +90,10 @@ def mol_shapes_to_dims(mol_tensors=None, mol_shapes=None):
     max_atoms_vals = [max_atoms0, max_atoms1, max_atoms2]
     max_degree_vals = [max_degree1, max_degree2]
 
-    assert len(set(num_molecules_vals))==1, 'num_molecules does not match within tensors (found: {})'.format(num_molecules_vals)
-    assert len(set(max_atoms_vals))==1, 'max_atoms does not match within tensors (found: {})'.format(max_atoms_vals)
-    assert len(set(max_degree_vals))==1, 'max_degree does not match within tensors (found: {})'.format(max_degree_vals)
+    assert len(set(num_molecules_vals)) == 1, 'num_molecules does not match within tensors (found: {})'.format(
+        num_molecules_vals)
+    assert len(set(max_atoms_vals)) == 1, 'max_atoms does not match within tensors (found: {})'.format(max_atoms_vals)
+    assert len(set(max_degree_vals)) == 1, 'max_degree does not match within tensors (found: {})'.format(
+        max_degree_vals)
 
     return max_atoms1, max_degree1, num_atom_features, num_bond_features, num_molecules1

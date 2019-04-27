@@ -42,7 +42,7 @@ pip install git+https://github.com/iwatobipen/keras-neural-graph-fingerprint
 ```
 
 ## Neural Graph Fingerprints for the impatient ones
-For convienience, a function is included that can build default Neural Graph models and retrieve
+For convenience, a function is included that can build default Neural Graph models and retrieve
 the Neural Graph Fingerprint, which can be later used for training of any ML model. See 
 [NGF/models.py](NGF/models.py) for details.
 
@@ -108,7 +108,7 @@ resulting in a waste of computation power.
 
 The alternative is to represent the entire dataset as a bag of atoms as in the
 authors [original implementation](https://github.com/HIPS/neural-fingerprint). For
-larger datasets, this is infeasable. In [GUR9000's implementation] (https://github.com/GUR9000/KerasNeuralFingerprint)
+larger datasets, this is infeasible. In [GUR9000's implementation] (https://github.com/GUR9000/KerasNeuralFingerprint)
 the same approach is used, but each batch is pre-calculated as a bag of atoms.
 The downside of this is that each epoch uses the exact same composition of batches,
 decreasing the stochasticity. Furthermore, Keras recognises the variability in batch-
@@ -116,7 +116,7 @@ size and will not run. In his implementation GUR9000 included a modified version
 of Keras to correct for this.
 
 The tensor representation used in this repository does not have these downsides,
-and allows for many modificiations of Duvenauds algorithm (there is a lot to explore).
+and allows for many modifications of Duvenauds algorithm (there is a lot to explore).
 
 Their representation may be optimised for the regular algorithm, but at a first
 glance, the tensor implementation seems to perform reasonably fast (check out
@@ -167,7 +167,7 @@ atoms1 = NeuralGraphHidden(conv_width, activation='relu', bias=False, W_regulari
 ```
 
 The reason is that the same `l2` object will be passed to each internal layer,
-wheras an `l2` object can obly be assigned to one layer.
+whereas an `l2` object can only be assigned to one layer.
 
 Method 2. will work, because a new layer is instanciated based on the configuration
 of the passed layer.
@@ -177,8 +177,8 @@ time it is called (as would be the case for the given lambda function).
 
 
 ## NeuralGraph models
-For convienience, two builder functions are included that can build a variety
-of Neural Graph models by specifiying it's parameters. See [NGF/models.py](NGF/models.py).
+For convenience, two builder functions are included that can build a variety
+of Neural Graph models by specifying it's parameters. See [NGF/models.py](NGF/models.py).
 
 The examples in [examples.py](examples.py) should help you along the way.
 NGF

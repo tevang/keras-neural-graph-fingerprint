@@ -2,13 +2,13 @@ Metadata-Version: 1.2
 Name: NGF
 Version: 1.0
 Summary: 
-*** An implementation of Convolutional Networks on Graphs for Learning Molecular Fingerprints in Keras. ***
+*** An implementation of Convolutional Networks on Graphs for Learning Molecular Fingerprints in Keras 2.x. ***
 
-Home-page: TBD
+Home-page: https://github.com/iwatobipen/keras-neural-graph-fingerprint
 Author: Ties van Rozendaal
 Author-email: git@tivaro.nl
 Maintainer: Thomas Evangelidis
 Maintainer-email: tevang3@gmail.com
-License: ConsScorTK is free ONLY for non-commercial usage.
+License: MIT.
 Description: Read the README.md file.
 Platform: Unix

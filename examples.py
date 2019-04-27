@@ -1,6 +1,18 @@
-''' Examples that demonstrate some of the functionality in the NGF module
 '''
-from __future__ import division, print_function, absolute_import
+Examples that demonstrate some of the functionality in the NGF module
+'''
+
+import sys; print('Python %s on %s' % (sys.version, sys.platform))
+sys.path.extend(['/home2/thomas/Programs/keras-neural-graph-fingerprint'])
+
+# For the impatients
+from NGF.models import *
+SMILES = ['CCCCNC(=O)[C@H](C)C[C@H](O)[C@@H]2Cc3cc(Cc1ccccc1OCC(=O)N[C@@H](C)C(=O)N2)c(O)cc3',
+            'CCCCNC(=O)[C@H](C)C[C@H](O)[C@@H]2Cc3ccc(O)c(Cc1ccccc1OCCCCC(=O)N2)c3']
+NG_fp = get_ngf(SMILES, model_type='1')
+
+
+# from __future__ import division, print_function, absolute_import
 
 from keras import models
 from keras.layers import Input, add, Dense
@@ -48,7 +60,7 @@ edges = Input(name='edge_inputs', shape=(max_atoms, max_degree), dtype='int32')
 atoms1 = NeuralGraphHidden(conv_width, activation='relu', use_bias=False)([atoms0, bonds, edges])
 atoms2 = NeuralGraphHidden(conv_width, activation='relu', use_bias=False)([atoms1, bonds, edges])
 
-# Define the outputs of each (convoluted) atom featuer layer to fingerprint
+# Define the outputs of each (convoluted) atom feature layer to fingerprint
 fp_out0 = NeuralGraphOutput(fp_length, activation='softmax')([atoms0, bonds, edges])
 fp_out1 = NeuralGraphOutput(fp_length, activation='softmax')([atoms1, bonds, edges])
 fp_out2 = NeuralGraphOutput(fp_length, activation='softmax')([atoms2, bonds, edges])
@@ -71,7 +83,6 @@ model.fit([X_atoms, X_bonds, X_edges], labels, epochs=1, batch_size=32, validati
 MODEL = models.Model(inputs=[atoms0, bonds, edges], outputs=[final_fp])
 MODEL.compile(optimizer='adagrad', loss='mse')
 MODEL.predict([X_atoms, X_bonds, X_edges])
-
 
 # ==============================================================================
 # ============ Example 2: Initialising layers in different ways  ===============
@@ -115,10 +126,10 @@ model2.summary()
 print("{:=^100}".format(' Example 3 '))
 
 model3 = build_graph_conv_model(max_atoms, max_degree, num_atom_features, num_bond_features,
-								learning_type='regression', conv_layer_sizes=[conv_width, conv_width],
+                                learning_type='regression', conv_layer_sizes=[conv_width, conv_width],
                                 fp_layer_size=[fp_length, fp_length, fp_length],
-								conv_activation='relu', fp_activation='softmax',
-								conv_bias=False)
+                                conv_activation='relu', fp_activation='softmax',
+                                conv_bias=False)
 # Show summary
 model3.summary()
 

@@ -92,7 +92,6 @@ def neighbour_lookup(atoms, edges, maskvalue=0, include_self=False):
     offset = K.reshape(K.cast(tf.range(batch_n, dtype='int32'), dtype=K.dtype(masked_edges)), offset_shape)
     offset *= K.cast(lookup_size, dtype=K.dtype(offset))
 
-
     # apply offset to account for the fact that after reshape, all individual
     #   batch_n indices will be combined into a single big index
     flattened_atoms = K.reshape(masked_atoms, (-1, num_atom_features))
@@ -105,15 +104,16 @@ def neighbour_lookup(atoms, edges, maskvalue=0, include_self=False):
 
     # Unflatten result
     output_shape = (batch_n, max_atoms, max_degree, num_atom_features)
-    #output = T.reshape(flattened_result, output_shape)
+    # output = T.reshape(flattened_result, output_shape)
     # Tensorflow/backend reshape:
     output = K.reshape(flattened_result, output_shape)
 
     if include_self:
         # return K.concatenate([K.expand_dims(atoms, dim=2), output], axis=2)
         # Tensorflow concat:
-        return tf.concat([K.expand_dims(atoms, axis=2), output], axis=2) # Keras 2: raplaced dim with axis
+        return tf.concat([K.expand_dims(atoms, axis=2), output], axis=2)  # Keras 2: raplaced dim with axis
     return output
+
 
 class NeuralGraphHidden(layers.Layer):
     ''' Hidden Convolutional layer in a Neural Graph (as in Duvenaud et. al.,
@@ -186,7 +186,7 @@ class NeuralGraphHidden(layers.Layer):
             # Keras2: we assume all the kwargs should be passed to the Dense layer
             # dense_layer_kwargs, kwargs = filter_func_args(layers.Dense.__init__,
             # kwargs, overrule_args=['name'])
-            self.create_inner_layer_fn = lambda: layers.Dense(self.conv_width, **kwargs) #dense_layer_kwargs)
+            self.create_inner_layer_fn = lambda: layers.Dense(self.conv_width, **kwargs)  # dense_layer_kwargs)
 
         # Case 2: Check if an initialised keras layer is given
         elif isinstance(inner_layer_arg, layers.Layer):
@@ -194,21 +194,23 @@ class NeuralGraphHidden(layers.Layer):
             _, self.conv_width = inner_layer_arg.compute_output_shape((None, 1))
             # layer_from_config will mutate the config dict, therefore create a get fn
             self.create_inner_layer_fn = lambda: layer_from_config(dict(
-                                                    class_name=inner_layer_arg.__class__.__name__,
-                                                    config=inner_layer_arg.get_config()))
+                class_name=inner_layer_arg.__class__.__name__,
+                config=inner_layer_arg.get_config()))
 
         # Case 3: Check if a function is provided that returns a initialised keras layer
         elif callable(inner_layer_arg):
             example_instance = inner_layer_arg()
-            assert isinstance(example_instance, layers.Layer), 'When initialising with a function, the function has to return a keras layer'
+            assert isinstance(example_instance,
+                              layers.Layer), 'When initialising with a function, the function has to return a keras layer'
             assert example_instance.built == False, 'When initialising with a keras layer, it cannot be built.'
             _, self.conv_width = example_instance.compute_output_shape((None, 1))
             self.create_inner_layer_fn = inner_layer_arg
 
         else:
-            raise ValueError('NeuralGraphHidden has to be initialised with 1). int conv_widht, 2). a keras layer instance, or 3). a function returning a keras layer instance.')
+            raise ValueError(
+                'NeuralGraphHidden has to be initialised with 1). int conv_widht, 2). a keras layer instance, or 3). a function returning a keras layer instance.')
 
-        super(NeuralGraphHidden, self).__init__() # Keras2: all the kwargs will be passed to the Dense layer only
+        super(NeuralGraphHidden, self).__init__()  # Keras2: all the kwargs will be passed to the Dense layer only
 
     def build(self, inputs_shape):
 
@@ -223,7 +225,6 @@ class NeuralGraphHidden(layers.Layer):
         self.trainable_weights = []
         self.inner_3D_layers = []
         for degree in range(max_degree):
-
             # Initialise inner layer, and rename it
             inner_layer = self.create_inner_layer_fn()
             inner_layer_type = inner_layer.__class__.__name__.lower()
@@ -235,7 +236,7 @@ class NeuralGraphHidden(layers.Layer):
             inner_3D_layer = layers.TimeDistributed(inner_layer, name=inner_3D_layer_name)
 
             # Build the TimeDistributed layer (which will build the Dense layer)
-            inner_3D_layer.build((None, max_atoms, num_atom_features+num_bond_features))
+            inner_3D_layer.build((None, max_atoms, num_atom_features + num_bond_features))
 
             # Store inner_3D_layer and it's weights
             self.inner_3D_layers.append(inner_3D_layer)
@@ -272,14 +273,13 @@ class NeuralGraphHidden(layers.Layer):
         # For each degree we convolve with a different weight matrix
         new_features_by_degree = []
         for degree in range(self.max_degree):
-
             # Create mask for this degree
             atom_masks_this_degree = K.cast(K.equal(atom_degrees, degree), K.floatx())
 
             # Multiply with hidden merge layer
             #   (use time Distributed because we are dealing with 2D input/3D for batches)
             # Add keras shape to let keras now the dimensions
-            summed_features._keras_shape = (None, max_atoms, num_atom_features+num_bond_features)
+            summed_features._keras_shape = (None, max_atoms, num_atom_features + num_bond_features)
             new_unmasked_features = self.inner_3D_layers[degree](summed_features)
 
             # Do explicit masking because TimeDistributed does not support masking
@@ -304,6 +304,7 @@ class NeuralGraphHidden(layers.Layer):
     def from_config(cls, config):
         # Use layer build function to initialise new NeuralHiddenLayer
         inner_layer_config = config.pop('inner_layer_config')
+
         # create_inner_layer_fn = lambda: layer_from_config(inner_layer_config.copy())
         def create_inner_layer_fn():
             return layer_from_config(deepcopy(inner_layer_config))
@@ -395,7 +396,7 @@ class NeuralGraphOutput(layers.Layer):
             # we assume all the kwargs should be passed to the Dense layer
             # dense_layer_kwargs, kwargs = filter_func_args(layers.Dense.__init__,
             # kwargs, overrule_args=['name'])
-            self.create_inner_layer_fn = lambda: layers.Dense(self.fp_length, **kwargs) # dense_layer_kwargs)
+            self.create_inner_layer_fn = lambda: layers.Dense(self.fp_length, **kwargs)  # dense_layer_kwargs)
 
         # Case 2: Check if an initialised keras layer is given
         elif isinstance(inner_layer_arg, layers.Layer):
@@ -406,15 +407,17 @@ class NeuralGraphOutput(layers.Layer):
         # Case 3: Check if a function is provided that returns a initialised keras layer
         elif callable(inner_layer_arg):
             example_instance = inner_layer_arg()
-            assert isinstance(example_instance, layers.Layer), 'When initialising with a function, the function has to return a keras layer'
+            assert isinstance(example_instance,
+                              layers.Layer), 'When initialising with a function, the function has to return a keras layer'
             assert example_instance.built == False, 'When initialising with a keras layer, it cannot be built.'
             _, self.fp_length = example_instance.compute_output_shape((None, 1))
             self.create_inner_layer_fn = inner_layer_arg
 
         else:
-            raise ValueError('NeuralGraphHidden has to be initialised with 1). int conv_widht, 2). a keras layer instance, or 3). a function returning a keras layer instance.')
+            raise ValueError(
+                'NeuralGraphHidden has to be initialised with 1). int conv_widht, 2). a keras layer instance, or 3). a function returning a keras layer instance.')
 
-        super(NeuralGraphOutput, self).__init__() # Keras2: all the kwargs will be passed to the Dense layer only
+        super(NeuralGraphOutput, self).__init__()  # Keras2: all the kwargs will be passed to the Dense layer only
 
     def build(self, inputs_shape):
 
@@ -426,7 +429,7 @@ class NeuralGraphOutput(layers.Layer):
         # Initialise dense layer with specified params (kwargs) and name
         inner_layer = self.create_inner_layer_fn()
         inner_layer_type = inner_layer.__class__.__name__.lower()
-        inner_layer.name = self.name + '_inner_'+ inner_layer_type
+        inner_layer.name = self.name + '_inner_' + inner_layer_type
 
         # Initialise TimeDistributed layer wrapper in order to parallelise
         #   dense layer across atoms
@@ -434,11 +437,10 @@ class NeuralGraphOutput(layers.Layer):
         self.inner_3D_layer = layers.TimeDistributed(inner_layer, name=inner_3D_layer_name)
 
         # Build the TimeDistributed layer (which will build the Dense layer)
-        self.inner_3D_layer.build((None, max_atoms, num_atom_features+num_bond_features))
+        self.inner_3D_layer.build((None, max_atoms, num_atom_features + num_bond_features))
 
         # Store dense_3D_layer and it's weights
         self.trainable_weights = self.inner_3D_layer.trainable_weights
-
 
     def call(self, inputs, mask=None):
         atoms, bonds, edges = inputs
@@ -467,7 +469,7 @@ class NeuralGraphOutput(layers.Layer):
         atoms_bonds_features = tf.concat([atoms, summed_bond_features], axis=-1)
 
         # Compute fingerprint
-        atoms_bonds_features._keras_shape = (None, max_atoms, num_atom_features+num_bond_features)
+        atoms_bonds_features._keras_shape = (None, max_atoms, num_atom_features + num_bond_features)
         fingerprint_out_unmasked = self.inner_3D_layer(atoms_bonds_features)
 
         # Do explicit masking because TimeDistributed does not support masking
@@ -504,6 +506,7 @@ class NeuralGraphOutput(layers.Layer):
                                             class_name=inner_layer.__class__.__name__)
         return config
 
+
 class NeuralGraphPool(layers.Layer):
     ''' Pooling layer in a Neural graph, for each atom, takes the max for each
     feature between the atom and it's neighbours
@@ -518,6 +521,7 @@ class NeuralGraphPool(layers.Layer):
         New atom features (of same shape:)
         `(samples, max_atoms, atom_features)`
     '''
+
     def __init__(self, **kwargs):
         super(NeuralGraphPool, self).__init__(**kwargs)
 
@@ -539,7 +543,6 @@ class NeuralGraphPool(layers.Layer):
         return max_features * general_atom_mask
 
     def compute_output_shape(self, inputs_shape):
-
         # Only returns `atoms` tensor
         return inputs_shape[0]
 
@@ -555,6 +558,7 @@ class AtomwiseDropout(layers.Layer):
         p: float between 0 and 1. Fraction of the input units to drop.
 
     '''
+
     def __init__(self, p, **kwargs):
         self.dropout_layer = layers.Dropout(p)
         self.uses_learning_phase = self.dropout_layer.uses_learning_phase
@@ -579,4 +583,4 @@ class AtomwiseDropout(layers.Layer):
         config['p'] = self.dropout_layer.p
         return config
 
-#TODO: Add GraphWiseDropout layer, that creates masks for each degree separately.
+# TODO: Add GraphWiseDropout layer, that creates masks for each degree separately.
