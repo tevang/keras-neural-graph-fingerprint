@@ -1,6 +1,7 @@
 from setuptools import setup, find_packages
 from setuptools.command.install import install as InstallCommand
 
+
 def parse_requirements(requirements):
     with open(requirements) as f:
         return [l.strip('\n') for l in f if l.strip('\n') and not l.startswith('#')]
@@ -14,6 +15,7 @@ class Install(InstallCommand):
         _main(['install', '.'])
         InstallCommand.run(self, *args, **kwargs)
 
+
 setup(
     name="NGF",
     author="Ties van Rozendaal",
@@ -26,13 +28,13 @@ setup(
     license="MIT.",
     version="1.0",
     platforms="Unix",
-    dependency_links = [],
+    dependency_links=[],
     cmdclass={
         'install': Install,
     },
-    packages=find_packages(where='.',  exclude=()),
-    #package_dir={'':'dev'},
-    install_requires = parse_requirements('requirements.txt')
+    packages=find_packages(where='.', exclude=()),
+    # package_dir={'':'dev'},
+    install_requires=parse_requirements('requirements.txt')
 )
 
 # NOTES:

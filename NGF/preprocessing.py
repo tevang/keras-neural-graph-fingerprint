@@ -29,16 +29,18 @@ def padaxis(array, new_size, axis, pad_value=0, pad_right=True):
 
     '''
     add_size = new_size - array.shape[axis]
-    assert add_size >= 0, 'Cannot pad dimension {0} of size {1} to smaller size {2}'.format(axis, array.shape[axis], new_size)
-    pad_width = [(0,0)]*len(array.shape)
+    assert add_size >= 0, 'Cannot pad dimension {0} of size {1} to smaller size {2}'.format(axis, array.shape[axis],
+                                                                                            new_size)
+    pad_width = [(0, 0)] * len(array.shape)
 
-    #pad after if int is provided
+    # pad after if int is provided
     if pad_right:
         pad_width[axis] = (0, add_size)
     else:
         pad_width[axis] = (add_size, 0)
 
     return np.pad(array, pad_width=pad_width, mode='constant', constant_values=pad_value)
+
 
 def tensorise_smiles(smiles, max_degree=5, max_atoms=None):
     '''Takes a list of smiles and turns the graphs in tensor representation.
@@ -84,7 +86,7 @@ def tensorise_smiles(smiles, max_degree=5, max_atoms=None):
 
     for mol_ix, s in enumerate(smiles):
 
-        #load mol, atoms and bonds
+        # load mol, atoms and bonds
         mol = Chem.MolFromSmiles(s)
         assert mol is not None, 'Could not parse smiles {}'.format(s)
         atoms = mol.GetAtoms()
@@ -108,7 +110,7 @@ def tensorise_smiles(smiles, max_degree=5, max_atoms=None):
             rdkit_ix_lookup[atom.GetIdx()] = atom_ix
 
         # preallocate array with neighbour lists (indexed by atom)
-        connectivity_mat = [ [] for _ in atoms]
+        connectivity_mat = [[] for _ in atoms]
 
         for bond in bonds:
             # lookup atom ids
@@ -131,16 +133,17 @@ def tensorise_smiles(smiles, max_degree=5, max_atoms=None):
             bond_tensor[mol_ix, a1_ix, a1_neigh, :] = bond_features
             bond_tensor[mol_ix, a2_ix, a2_neigh, :] = bond_features
 
-            #add to connectivity matrix
+            # add to connectivity matrix
             connectivity_mat[a1_ix].append(a2_ix)
             connectivity_mat[a2_ix].append(a1_ix)
 
-        #store connectivity matrix
+        # store connectivity matrix
         for a1_ix, neighbours in enumerate(connectivity_mat):
             degree = len(neighbours)
             edge_tensor[mol_ix, a1_ix, : degree] = neighbours
 
     return atom_tensor, bond_tensor, edge_tensor
+
 
 def concat_mol_tensors(mol_tensors_list, match_degree=True, match_max_atoms=False):
     '''Concatenates a list of molecule tensors
@@ -163,7 +166,6 @@ def concat_mol_tensors(mol_tensors_list, match_degree=True, match_max_atoms=Fals
     max_atoms = mol_tensors_list[0][0].shape[1]
     max_degree = mol_tensors_list[0][1].shape[2]
 
-
     # Obtain the max_degree and max_atoms of all tensors in the list
     for atoms, bonds, edges in mol_tensors_list:
         assert bonds.shape[0] == edges.shape[0] == atoms.shape[0], "batchsize doesn't match within tensor"
@@ -171,21 +173,22 @@ def concat_mol_tensors(mol_tensors_list, match_degree=True, match_max_atoms=Fals
         assert bonds.shape[2] == edges.shape[2], "degree doesn't match within tensor"
 
         if match_max_atoms:
-            assert max_atoms == atoms.shape[1], '`max_atoms` of molecule tensors does not match, set `match_max_atoms` to False to adjust'
+            assert max_atoms == atoms.shape[
+                1], '`max_atoms` of molecule tensors does not match, set `match_max_atoms` to False to adjust'
         else:
             max_atoms = max(max_atoms, atoms.shape[1])
 
         if match_degree:
-            assert max_degree == bonds.shape[2], '`degree` of molecule tensors does not match, set `match_degree` to False to adjust'
+            assert max_degree == bonds.shape[
+                2], '`degree` of molecule tensors does not match, set `match_degree` to False to adjust'
         else:
-            max_degree = max(max_degree,  bonds.shape[2])
+            max_degree = max(max_degree, bonds.shape[2])
 
     # Pad if necessary and separate tensors
     atoms_list = []
     bonds_list = []
     edges_list = []
     for atoms, bonds, edges in mol_tensors_list:
-
         atoms = padaxis(atoms, max_atoms, axis=1)
         bonds = padaxis(bonds, max_atoms, axis=1)
         edges = padaxis(edges, max_atoms, axis=1, pad_value=-1)
@@ -197,7 +200,7 @@ def concat_mol_tensors(mol_tensors_list, match_degree=True, match_max_atoms=Fals
         bonds_list.append(bonds)
         edges_list.append(edges)
 
-    #stack along batch-size axis
+    # stack along batch-size axis
     atoms = np.concatenate(atoms_list, axis=0)
     bonds = np.concatenate(bonds_list, axis=0)
     edges = np.concatenate(edges_list, axis=0)
@@ -205,7 +208,7 @@ def concat_mol_tensors(mol_tensors_list, match_degree=True, match_max_atoms=Fals
     return atoms, bonds, edges
 
 
-def tensorise_smiles_mp(smiles, max_degree=5, max_atoms=None, workers=cpu_count()-1, chunksize=3000, verbose=True):
+def tensorise_smiles_mp(smiles, max_degree=5, max_atoms=None, workers=cpu_count() - 1, chunksize=3000, verbose=True):
     ''' Multiprocess implementation of `tensorise_smiles`
 
     # Arguments:
@@ -228,11 +231,12 @@ def tensorise_smiles_mp(smiles, max_degree=5, max_atoms=None, workers=cpu_count(
     pool = Pool(processes=workers)
 
     # Create an iterator
-    #http://stackoverflow.com/questions/312443/how-do-you-split-a-list-into-evenly-sized-chunks
+    # http://stackoverflow.com/questions/312443/how-do-you-split-a-list-into-evenly-sized-chunks
     def chunks(l, n):
         """Yield successive n-sized chunks from l."""
         for i in range(0, len(l), n):
             yield l[i:i + n]
+
     smiles_chunks = chunks(smiles, chunksize)
 
     # MAP: Tensorise in parallel
@@ -253,4 +257,4 @@ def tensorise_smiles_mp(smiles, max_degree=5, max_atoms=None, workers=cpu_count(
     # REDUCE: Concatenate the obtained tensors
     pool.close()
     pool.join()
-    return concat_mol_tensors(tensor_list, match_degree=max_degree!=None, match_max_atoms=max_atoms!=None)
+    return concat_mol_tensors(tensor_list, match_degree=max_degree != None, match_max_atoms=max_atoms != None)
